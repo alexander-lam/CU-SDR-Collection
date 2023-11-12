@@ -41,7 +41,7 @@ function settings = initSettings()
 %% Processing settings ====================================================
 % Number of milliseconds to be processed used 36000 + any transients (see
 % below - in Nav parameters) to ensure nav subframes are provided
-settings.msToProcess        = 25000;        %[ms]
+settings.msToProcess        = 5000;        %[ms]
 
 % Number of channels to be used for signal processing
 settings.numberOfChannels   = 6;
@@ -55,7 +55,8 @@ settings.skipNumberOfBytes     = 0;
 %% Raw signal file name and other parameter ===============================
 % This is a "default" name of the data file (signal record) to be used in
 % the post-processing mode
-settings.fileName           = '..\..\ASEN6091midtermExam2023.bin';
+%settings.fileName           = '..\..\ASEN6091midtermExam2023.bin';
+settings.fileName           = '..\..\SU_6msps_23Aug2023_23-15UTC_20kHzIF.bin';
 % Data type used to store one sample
 settings.dataType           = 'schar';  
 
@@ -65,8 +66,10 @@ settings.dataType           = 'schar';
 settings.fileType           = 2;
 
 % Intermediate, sampling and code frequencies
-settings.IF                 = -4.58e6;     % [Hz]
-settings.samplingFreq       = 56e6;        % [Hz]
+%settings.IF                 = -4.58e6;     % [Hz]
+%settings.samplingFreq       = 56e6;        % [Hz]
+settings.IF = 20e3;
+settings.samplingFreq = 6e6;
 settings.codeFreqBasis      = 1.023e6;     % [Hz]
 
 % Define number of chips in a code period
@@ -80,7 +83,7 @@ settings.carrFreqBasis = 1575.42e6;    % [Hz]
 settings.skipAcquisition    = 0;
 % List of satellites to look for. Some satellites can be excluded to speed
 % up acquisition
-settings.acqSatelliteList   = [195];         %[PRN numbers]
+settings.acqSatelliteList   = [4 28 195];         %[PRN numbers]
 % Band around IF to search for satellite signal. Depends on max Doppler.
 % It is single sideband, so the whole search band is tiwce of it.
 settings.acqSearchBand      = 8000;           %[Hz]
@@ -100,12 +103,13 @@ settings.resamplingflag         = 0;              % 0 - Off
 %% Tracking loops settings ================================================
 % Code tracking loop parameters
 settings.dllDampingRatio         = 0.7;
-settings.dllNoiseBandwidth       = 1.5;       %[Hz]
-settings.dllCorrelatorSpacing    = 0.06;     %[chips]
+settings.dllNoiseBandwidth       = 10;       %[Hz]
+settings.dllCorrelatorSpacing    = 0.1;     %[chips]
 
 % Carrier tracking loop parameters
 settings.pllDampingRatio         = 0.7;
 settings.pllNoiseBandwidth       = 20;      %[Hz]
+
 % Integration time for DLL and PLL
 settings.intTime                 = 0.01;      %[s]
 settings.pilotTRKflag       = 1; 
