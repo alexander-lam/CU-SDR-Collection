@@ -94,7 +94,7 @@ settings.acqNonCohTime      = 1;                %[ms]
 % Threshold for the signal presence decision rule
 settings.acqThreshold       = 2;
 % Frequency search step for coarse acquisition
-settings.acqSearchStep      = 50;               % [Hz]
+settings.acqSearchStep      = 10;               % [Hz]
 % Sampling rate threshold for downsampling 
 settings.resamplingThreshold    = 8e6;            % [Hz]
 % Enable/dissable use of downsampling for acquisition
@@ -103,7 +103,7 @@ settings.resamplingflag         = 0;              % 0 - Off
 %% Tracking loops settings ================================================
 % Code tracking loop parameters
 settings.dllDampingRatio         = 0.7;
-settings.dllNoiseBandwidth       = 10;       %[Hz]
+settings.dllNoiseBandwidth       = 8;       %[Hz]
 settings.dllCorrelatorSpacing    = 0.1;     %[chips]
 
 % Carrier tracking loop parameters
