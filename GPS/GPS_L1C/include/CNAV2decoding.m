@@ -1,11 +1,9 @@
 function [eph, firstSubFrame,TOW] = CNAV2decoding(trackResults,channelNr,settings)
-% findPreambles finds the first preamble occurrence in the bit stream of
-% each channel. The preamble is verified by check of the spacing between
-% preambles (6sec) and parity checking of the first two words in a
-% subframe. At the same time function returns list of channels, that are in
-% tracking state and with valid preambles in the nav data stream.
-%
-%[eph, firstSubFrame,TOW] = BCNAV1decoding(trackResults,channelNr,settings)
+% Frame synchronization is completed by correlating the L1C overlay code
+% with the L1C pilot channel. Polarity checks completed by verifying valid
+% result for subframe 1. CRC-24Q parity check included for subframes 2 and
+% 3. Subframes 1 and 2 are decoded, subframe 3 is ignored.
+%[eph, firstSubFrame,TOW] = CNAV2decoding(trackResults,channelNr,settings)
 %
 %   Inputs:
 %       I_P_InputBits   - output from the tracking function
@@ -23,13 +21,6 @@ function [eph, firstSubFrame,TOW] = CNAV2decoding(trackResults,channelNr,setting
 %       eph             - SV ephemeris.
 
 %--------------------------------------------------------------------------
-%                         CU Multi-GNSS SDR  
-% (C) Written by Yafeng Li, Nagaraj C. Shivaramaiah and Dennis M. Akos
-
-% Reference: Li, Y., Shivaramaiah, N.C. & Akos, D.M. Design and 
-% implementation of an open-source BDS-3 B1C/B2a SDR receiver. 
-% GPS Solut (2019) 23: 60. https://doi.org/10.1007/s10291-019-0853-z
-%--------------------------------------------------------------------------
 %
 %This program is free software; you can redistribute it and/or
 %modify it under the terms of the GNU General Public License
@@ -46,10 +37,6 @@ function [eph, firstSubFrame,TOW] = CNAV2decoding(trackResults,channelNr,setting
 %Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 %USA.
 %--------------------------------------------------------------------------
-
-% CVS record:
-% $Id: findPreambles.m,v 1.1.2.10 2017/01/19 21:13:22 dpl Exp $
-
 
 %--- Initialize ephemeris structute  --------------------------------------
 % This is in order to make sure variable 'eph' for each SV has a similar

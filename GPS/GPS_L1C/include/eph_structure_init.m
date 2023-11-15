@@ -23,9 +23,6 @@ function eph= eph_structure_init()
 %USA.
 %--------------------------------------------------------------------------
 
-%CVS record:
-%$Id: ephemeris.m,v 1.1.2.7 2017/03/06 11:38:22 dpl Exp $
-
 % Flags for message data decoding. 0 indicates decoding fail, 1 is
 % successful decoding.
 eph.flag = 0;

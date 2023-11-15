@@ -16,16 +16,6 @@ function [navSolutions, eph] = postNavigation(trackResults, settings)
 %       eph             - received ephemerides of all SV (structure array).
 
 %--------------------------------------------------------------------------
-%                         CU Multi-GNSS SDR
-% (C) Developed for BDS B1C SDR by Yafeng Li, Nagaraj C. Shivaramaiah 
-% and Dennis M. Akos. 
-% Based on the original framework for GPS C/A SDR by Darius Plausinaitis,
-% Peter Rinder, Nicolaj Bertelsen and Dennis M. Akos
-%
-% Reference: Li, Y., Shivaramaiah, N.C. & Akos, D.M. Design and 
-% implementation of an open-source BDS-3 B1C/B2a SDR receiver. 
-% GPS Solut (2019) 23: 60. https://doi.org/10.1007/s10291-019-0853-z
-%--------------------------------------------------------------------------
 %This program is free software; you can redistribute it and/or
 %modify it under the terms of the GNU General Public License
 %as published by the Free Software Foundation; either version 2
@@ -41,9 +31,6 @@ function [navSolutions, eph] = postNavigation(trackResults, settings)
 %Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 %USA.
 %--------------------------------------------------------------------------
-
-%CVS record:
-%$Id: postNavigation.m,v 1.1.2.22 2006/08/09 17:20:11 dpl Exp $
 
 %% Check is there enough data to obtain any navigation solution ===========
 if (settings.msToProcess < 36000)

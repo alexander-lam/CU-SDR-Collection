@@ -35,10 +35,6 @@ function [flag,decodedBits] = BCH51_8Decoding(bits)
 %USA.
 %--------------------------------------------------------------------------
 
-%CVS record:
-%$Id: generateE5BIcode.m,v 1.1.2.5 2018/07/24 22:00:00 dpl Exp $
-
-
 % Threshold for determining the success or fail of the decoding. This value
 % can be reconfigued according to sepecific requirements
 threshold = 50;

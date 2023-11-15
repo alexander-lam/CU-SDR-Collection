@@ -20,13 +20,6 @@ function [eph] = ephemeris(navBitsBin,eph)
 %       eph         - SV ephemeris
 
 %--------------------------------------------------------------------------
-%                         CU Multi-GNSS SDR  
-% (C) Written by Yafeng Li, Nagaraj C. Shivaramaiah and Dennis M. Akos
-
-% Reference: Li, Y., Shivaramaiah, N.C. & Akos, D.M. Design and 
-% implementation of an open-source BDS-3 B1C/B2a SDR receiver. 
-% GPS Solut (2019) 23: 60. https://doi.org/10.1007/s10291-019-0853-z
-%--------------------------------------------------------------------------
 %This program is free software; you can redistribute it and/or
 %modify it under the terms of the GNU General Public License
 %as published by the Free Software Foundation; either version 2
@@ -42,12 +35,6 @@ function [eph] = ephemeris(navBitsBin,eph)
 %Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 %USA.
 %--------------------------------------------------------------------------
-
-%CVS record:
-%$Id: ephemeris.m,v 1.1.2.7 2006/08/14 11:38:22 dpl Exp $
-
-% For more details on message contents please refer to BDS-SIS-ICD-B1C-1.0.
-
 
 %% Check if the parameters are strings ==============================
 if ~ischar(navBitsBin)
@@ -77,7 +64,7 @@ if ~eph.flag
     sf2 = 10;
 
     % Decode subframe 2
-    eph.weekNumber      = bin2dec(navBitsBin(sf2:sf2+12))+2048;
+    eph.weekNumber      = bin2dec(navBitsBin(sf2:sf2+12));
     eph.ITOW            = bin2dec(navBitsBin(sf2+13:sf2+20));
     eph.t_op            = bin2dec(navBitsBin(sf2+21:sf2+31))*300;
     eph.health          = bin2dec(navBitsBin(sf2+32));
