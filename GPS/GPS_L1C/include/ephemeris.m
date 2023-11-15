@@ -1,31 +1,31 @@
-function [eph, TOW] = ephemeris(bits, D30Star)
+function [eph] = ephemeris(navBitsBin,eph)
 %Function decodes ephemerides and TOW from the given bit stream. The stream
-%(array) in the parameter BITS must contain 1500 bits. The first element in
+%(array) in the parameter BITS must contain 883 bits. The first element in
 %the array must be the first bit of a subframe. The subframe ID of the
 %first subframe in the array is not important.
 %
 %Function does not check parity!
 %
-%[eph, TOW] = ephemeris(bits, D30Star)
+%[eph] = ephemeris(navBitsBin,eph)
 %
 %   Inputs:
-%       bits        - bits of the navigation messages (5 subframes).
-%                   Type is character array and it must contain only
-%                   characters '0' or '1'.
-%       D30Star     - The last bit of the previous nav-word. Refer to the
-%                   GPS interface control document ICD (IS-GPS-200D) for
-%                   more details on the parity checking. Parameter type is
-%                   char. It must contain only characters '0' or '1'.
+%       navBitsBin  - bits of the navigation messages.Type is character array
+%                   and it must contain only characters '0' or '1'.
+%       eph         - The ephemeris for each PRN is decoded message by message.
+%                   To prevent lost of previous decoded messages, the eph sturcture
+%                   must be passed onto this function.
 %   Outputs:
 %       TOW         - Time Of Week (TOW) of the first sub-frame in the bit
 %                   stream (in seconds)
 %       eph         - SV ephemeris
 
 %--------------------------------------------------------------------------
-%                           SoftGNSS v3.0
-% 
-% Copyright (C) Darius Plausinaitis and Kristin Larson
-% Written by Darius Plausinaitis and Kristin Larson
+%                         CU Multi-GNSS SDR  
+% (C) Written by Yafeng Li, Nagaraj C. Shivaramaiah and Dennis M. Akos
+
+% Reference: Li, Y., Shivaramaiah, N.C. & Akos, D.M. Design and 
+% implementation of an open-source BDS-3 B1C/B2a SDR receiver. 
+% GPS Solut (2019) 23: 60. https://doi.org/10.1007/s10291-019-0853-z
 %--------------------------------------------------------------------------
 %This program is free software; you can redistribute it and/or
 %modify it under the terms of the GNU General Public License
@@ -46,124 +46,74 @@ function [eph, TOW] = ephemeris(bits, D30Star)
 %CVS record:
 %$Id: ephemeris.m,v 1.1.2.7 2006/08/14 11:38:22 dpl Exp $
 
+% For more details on message contents please refer to BDS-SIS-ICD-B1C-1.0.
 
-%% Check if there is enough data ==========================================
-if length(bits) < 1500
-    error('The parameter BITS must contain 1500 bits!');
-end
 
-%% Check if the parameters are strings ====================================
-if ~ischar(bits)
+%% Check if the parameters are strings ==============================
+if ~ischar(navBitsBin)
     error('The parameter BITS must be a character array!');
 end
 
-if ~ischar(D30Star)
-    error('The parameter D30Star must be a char!');
+% 'bits' should be row vector for 'bin2dec' function.
+[a, b] = size(navBitsBin);
+if a > b
+    navBitsBin = navBitsBin';
 end
 
 % Pi used in the GPS coordinate system
-gpsPi = 3.1415926535898; 
+gpsPi = 3.1415926535898;
 
-%--- Initialize ephemeris structure  -------------------------------------- 
-% This is in order to make sure variable 'eph' for each SV has a similar         
-% structure when only one or even none of the three requisite messages
-% is decoded for a given PRN.
-eph = eph_structure_init();
+%% ===== Decode the first subframe ==================================
+eph.PRN = bin2dec(navBitsBin(610:617));
+if (eph.PRN < 1) || ((eph.PRN > 63) && (eph.PRN < 193)) || (eph.PRN > 202)
+    return
+end
 
-%% Decode all 5 sub-frames ================================================
-for i = 1:5
+if ~eph.flag
+    % Decode subframe 1
+    eph.TOI = bin2dec(navBitsBin(1:9));
 
-    %--- "Cut" one sub-frame's bits ---------------------------------------
-    subframe = bits(300*(i-1)+1 : 300*i);
+    % Mark start index of subframe 2
+    sf2 = 10;
 
-    %--- Correct polarity of the data bits in all 10 words ----------------
-    for j = 1:10
-        [subframe(30*(j-1)+1 : 30*j)] = ...
-            checkPhase(subframe(30*(j-1)+1 : 30*j), D30Star);
-        
-        D30Star = subframe(30*j);
-    end
+    % Decode subframe 2
+    eph.weekNumber      = bin2dec(navBitsBin(sf2:sf2+12))+2048;
+    eph.ITOW            = bin2dec(navBitsBin(sf2+13:sf2+20));
+    eph.t_op            = bin2dec(navBitsBin(sf2+21:sf2+31))*300;
+    eph.health          = bin2dec(navBitsBin(sf2+32));
+    eph.t_oe            = bin2dec(navBitsBin(sf2+38:sf2+48))*300;
+    eph.deltaA          = twosComp2dec(navBitsBin(sf2+49:sf2+74))*2^(-9);
+    eph.aDot            = twosComp2dec(navBitsBin(sf2+75:sf2+99))*2^(-21);
+    eph.deltaN0         = twosComp2dec(navBitsBin(sf2+100:sf2+116))*2^(-44)*gpsPi;
+    eph.deltaN0Dot      = twosComp2dec(navBitsBin(sf2+117:sf2+139))*2^(-57)*gpsPi;
+    eph.M_0             = twosComp2dec(navBitsBin(sf2+140:sf2+172))*2^(-32)*gpsPi;
+    eph.e               = bin2dec(navBitsBin(sf2+173:sf2+205))*2^(-34);
+    eph.w               = twosComp2dec(navBitsBin(sf2+206:sf2+238))*2^(-32)*gpsPi;
+    eph.omega_0         = twosComp2dec(navBitsBin(sf2+239:sf2+271))*2^(-32)*gpsPi;
+    eph.i_0             = twosComp2dec(navBitsBin(sf2+272:sf2+304))*2^(-32)*gpsPi;
+    eph.deltaOmegaDot   = twosComp2dec(navBitsBin(sf2+305:sf2+321))*2^(-44)*gpsPi;
+    eph.IDOT            = twosComp2dec(navBitsBin(sf2+322:sf2+336))*2^(-44)*gpsPi;
+    eph.C_is            = twosComp2dec(navBitsBin(sf2+337:sf2+352))*2^(-30);
+    eph.C_ic            = twosComp2dec(navBitsBin(sf2+353:sf2+368))*2^(-30);
+    eph.C_rs            = twosComp2dec(navBitsBin(sf2+369:sf2+392))*2^(-8);
+    eph.C_rc            = twosComp2dec(navBitsBin(sf2+393:sf2+416))*2^(-8);
+    eph.C_us            = twosComp2dec(navBitsBin(sf2+417:sf2+437))*2^(-30);
+    eph.C_uc            = twosComp2dec(navBitsBin(sf2+438:sf2+458))*2^(-30);
+    eph.a_f0            = twosComp2dec(navBitsBin(sf2+470:sf2+495))*2^(-35);
+    eph.a_f1            = twosComp2dec(navBitsBin(sf2+496:sf2+515))*2^(-48);
+    eph.a_f2            = twosComp2dec(navBitsBin(sf2+516:sf2+525))*2^(-60);
+    eph.T_GD            = twosComp2dec(navBitsBin(sf2+526:sf2+538))*2^(-35);
+    eph.ISC_L1Cp        = twosComp2dec(navBitsBin(sf2+539:sf2+551))*2^(-35);
+    eph.ISC_L1Cd        = twosComp2dec(navBitsBin(sf2+552:sf2+564))*2^(-35);
+    eph.WN_op           = bin2dec(navBitsBin(sf2+566:sf2+573))+2048;
 
-    %--- Decode the sub-frame id ------------------------------------------
-    % For more details on sub-frame contents please refer to GPS IS.
-    subframeID = bin2dec(subframe(50:52));
+    % Subframe 3 not decoded
+end
 
-    %--- Decode sub-frame based on the sub-frames id ----------------------
-    % The task is to select the necessary bits and convert them to decimal
-    % numbers. For more details on sub-frame contents please refer to GPS
-    % ICD (IS-GPS-200D).
-    switch subframeID
-        case 1  %--- It is subframe 1 -------------------------------------
-            % It contains WN, SV clock corrections, health and accuracy
-            eph.weekNumber  = bin2dec(subframe(61:70)) + 1024;
-            eph.accuracy    = bin2dec(subframe(73:76));
-            eph.health      = bin2dec(subframe(77:82));
-            eph.T_GD        = twosComp2dec(subframe(197:204)) * 2^(-31);
-            eph.IODC        = bin2dec([subframe(83:84) subframe(197:204)]);
-            eph.t_oc        = bin2dec(subframe(219:234)) * 2^4;
-            eph.a_f2        = twosComp2dec(subframe(241:248)) * 2^(-55);
-            eph.a_f1        = twosComp2dec(subframe(249:264)) * 2^(-43);
-            eph.a_f0        = twosComp2dec(subframe(271:292)) * 2^(-31);
-            eph.idValid(1)  = 1;
+% TOW count is for next subframe, so subtract one TOI
+if ~eph.flag
+    eph.TOW = eph.ITOW * 7200 + (eph.TOI-1) * 18;
+end
 
-        case 2  %--- It is subframe 2 -------------------------------------
-            % It contains first part of ephemeris parameters
-            eph.IODE_sf2    = bin2dec(subframe(61:68));
-            eph.C_rs        = twosComp2dec(subframe(69: 84)) * 2^(-5);
-            eph.deltan      = ...
-                twosComp2dec(subframe(91:106)) * 2^(-43) * gpsPi;
-            eph.M_0         = ...
-                twosComp2dec([subframe(107:114) subframe(121:144)]) ...
-                * 2^(-31) * gpsPi;
-            eph.C_uc        = twosComp2dec(subframe(151:166)) * 2^(-29);
-            eph.e           = ...
-                bin2dec([subframe(167:174) subframe(181:204)]) ...
-                * 2^(-33);
-            eph.C_us        = twosComp2dec(subframe(211:226)) * 2^(-29);
-            eph.sqrtA       = ...
-                bin2dec([subframe(227:234) subframe(241:264)]) ...
-                * 2^(-19);
-            eph.t_oe        = bin2dec(subframe(271:286)) * 2^4;
-            eph.idValid(1)  = 2;
-
-        case 3  %--- It is subframe 3 -------------------------------------
-            % It contains second part of ephemeris parameters
-            eph.C_ic        = twosComp2dec(subframe(61:76)) * 2^(-29);
-            eph.omega_0     = ...
-                twosComp2dec([subframe(77:84) subframe(91:114)]) ...
-                * 2^(-31) * gpsPi;
-            eph.C_is        = twosComp2dec(subframe(121:136)) * 2^(-29);
-            eph.i_0         = ...
-                twosComp2dec([subframe(137:144) subframe(151:174)]) ...
-                * 2^(-31) * gpsPi;
-            eph.C_rc        = twosComp2dec(subframe(181:196)) * 2^(-5);
-            eph.omega       = ...
-                twosComp2dec([subframe(197:204) subframe(211:234)]) ...
-                * 2^(-31) * gpsPi;
-            eph.omegaDot    = twosComp2dec(subframe(241:264)) * 2^(-43) * gpsPi;
-            eph.IODE_sf3    = bin2dec(subframe(271:278));
-            eph.iDot        = twosComp2dec(subframe(279:292)) * 2^(-43) * gpsPi;
-            eph.idValid(3)  = 3;
-
-        case 4  %--- It is subframe 4 -------------------------------------
-            % Almanac, ionospheric model, UTC parameters.
-            % SV health (PRN: 25-32).
-            % Not decoded at the moment.
-
-        case 5  %--- It is subframe 5 -------------------------------------
-            % SV almanac and health (PRN: 1-24).
-            % Almanac reference week number and time.
-            % Not decoded at the moment.
-
-    end % switch subframeID ...
-
-end % for all 5 sub-frames ...
-
-%% Compute the time of week (TOW) of the first sub-frames in the array ====
-% Also correct the TOW. The transmitted TOW is actual TOW of the next
-% subframe and we need the TOW of the first subframe in this data block
-% (the variable subframe at this point contains bits of the last subframe). 
-% The duration of 5 subframe is 30 s, thus the start time of the first 
-% subframe
-TOW = bin2dec(subframe(31:47)) * 6 - 30;
-eph.TOW = TOW;
+% All required NAV data has been decoded
+eph.flag = 1;

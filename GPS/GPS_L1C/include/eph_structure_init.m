@@ -26,58 +26,44 @@ function eph= eph_structure_init()
 %CVS record:
 %$Id: ephemeris.m,v 1.1.2.7 2017/03/06 11:38:22 dpl Exp $
 
-% Flags for message data decoding. 0 indicates decoding fail, 1 is successful
-% decoding. idValid(1:2) for message type 10 and 11, idValid(3:10) for message
-% type 30:37, idValid(11) for others.
-eph.idValid(1:5) = zeros(1,5);
-% PRN
-eph.PRN  = [];
+% Flags for message data decoding. 0 indicates decoding fail, 1 is
+% successful decoding.
+eph.flag = 0;
 
-%--- It is subframe 1 -------------------------------------
-% It contains WN, SV clock corrections, health and accuracy
-eph.weekNumber  = [];
-eph.accuracy    = [];
-eph.health      = [];
-eph.T_GD        = [];
-eph.IODC        = [];
-eph.t_oc        = [];
-eph.a_f2        = [];
-eph.a_f1        = [];
-eph.a_f0        = [];
+% Subframe 1
+eph.TOI             = [];
 
-%--- It is subframe 2 -------------------------------------
-% It contains first part of ephemeris parameters
-eph.IODE_sf2    = [];
-eph.C_rs        = [];
-eph.deltan      = [];
-eph.M_0         = [];
-eph.C_uc        = [];
-eph.e           = [];
-eph.C_us        = [];
-eph.sqrtA       = [];
-eph.t_oe        = [];
+% Subframe 2
+eph.weekNumber      = [];
+eph.ITOW            = [];
+eph.t_op            = [];
+eph.health          = [];
+eph.t_oe            = [];
+eph.deltaA          = [];
+eph.aDot            = [];
+eph.deltaN0         = [];
+eph.deltaN0Dot      = [];
+eph.M_0             = [];
+eph.e               = [];
+eph.w               = [];
+eph.omega_0         = [];
+eph.i_0             = [];
+eph.deltaOmegaDot   = [];
+eph.IDOT            = [];
+eph.C_is            = [];
+eph.C_ic            = [];
+eph.C_rs            = [];
+eph.C_rc            = [];
+eph.C_us            = [];
+eph.C_uc            = [];
+eph.a_f0            = [];
+eph.a_f1            = [];
+eph.a_f2            = [];
+eph.T_GD            = [];
+eph.ISC_L1Cp        = [];
+eph.ISC_L1Cd        = [];
+eph.WN_op           = [];
 
-%--- It is subframe 3 -------------------------------------
-% It contains second part of ephemeris parameters
-eph.C_ic        = [];
-eph.omega_0     = [];
-eph.C_is        = [];
-eph.i_0         = [];
-eph.C_rc        = [];
-eph.omega       = [];
-eph.omegaDot    = [];
-eph.IODE_sf3    = [];
-eph.iDot        = [];
-
-%--- It is subframe 4 -------------------------------------
-% Almanac, ionospheric model, UTC parameters.
-% SV health (PRN: 25-32).
-% Not decoded at the moment.
-
-%--- It is subframe 5 -------------------------------------
-% SV almanac and health (PRN: 1-24).
-% Almanac reference week number and time.
-% Not decoded at the moment.
-
-% Tow of first decoded subframe
-eph.TOW         = [];
+% Subframe 3 not decoded
+eph.PRN             = [];
+eph.TOW             = [];
