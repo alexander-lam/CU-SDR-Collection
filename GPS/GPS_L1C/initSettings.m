@@ -41,7 +41,7 @@ function settings = initSettings()
 %% Processing settings ====================================================
 % Number of milliseconds to be processed used 36000 + any transients (see
 % below - in Nav parameters) to ensure nav subframes are provided
-settings.msToProcess        = 5000;        %[ms]
+settings.msToProcess        = 37000;        %[ms]
 
 % Number of channels to be used for signal processing
 settings.numberOfChannels   = 6;
@@ -83,7 +83,7 @@ settings.carrFreqBasis = 1575.42e6;    % [Hz]
 settings.skipAcquisition    = 0;
 % List of satellites to look for. Some satellites can be excluded to speed
 % up acquisition
-settings.acqSatelliteList   = [4 28 195];         %[PRN numbers]
+settings.acqSatelliteList   = [195];         %[PRN numbers]
 % Band around IF to search for satellite signal. Depends on max Doppler.
 % It is single sideband, so the whole search band is tiwce of it.
 settings.acqSearchBand      = 8000;           %[Hz]

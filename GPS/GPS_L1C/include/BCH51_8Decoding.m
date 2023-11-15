@@ -89,9 +89,15 @@ end
 % Determine the results according to the correlation values ---------------
 [maxValue,pos] = max(correValue);
 
-if maxValue >= threshold
+if abs(maxValue) >= threshold
     flag = 1;
-    decodedBits = hypoBits(pos,:);
+    % Per IS-GPS-800J, if maxValue > 0, MSB of subframe 1 is 0
+    % Else, MSB of subframe 1 is 1.
+    if maxValue > 0
+        decodedBits = [0 hypoBits(pos,:)];
+    else
+        decodedBits = [1 hypoBits(pos,:)];
+    end
 else
     flag = 0;
     decodedBits = [];

@@ -70,7 +70,7 @@ bits(bits > 0)  =  1;
 bits(bits <= 0) = -1;
 
 % Generate B1C secondary code of pilot channel for frame sync
-Secondary = generate2ndCode(trackResults(channelNr).PRN);
+Secondary = generateL1CoCode(trackResults(channelNr).PRN);
 
 %--- Find at what index the preambles start -------------------------------
 XcorrResult = xcorr(bits, Secondary);
@@ -80,19 +80,20 @@ xcorrLength = (length(XcorrResult) +  1) /2;
 XcorrResult = XcorrResult(xcorrLength : xcorrLength * 2 - 1);
 
 clear index;
-% Each B1C frame has 1800 bits
-index = find(abs(XcorrResult)>= 1799.5)';
+% Each L1C frame has 1800 bits
+%index = find(abs(XcorrResult)>= 1799.5)';
+index = find(abs(XcorrResult) >= 900)';
 
-% The whole B-CNAV1 frame bits (original) before encoding
-decodedNav = zeros(1,878);
+% The whole CNAV-2 frame bits (original) before encoding
+decodedNav = zeros(1,883);
 
 % Creates a CRC detector System object
 crcDet = comm.CRCDetector([24 23 18 17 14 11 10 7 6 5 4 3 1 0]);
 
-%% B1C data decoding and ephemeris extract ==========================
+%% L1C data decoding and ephemeris extract ==========================
 for i = 1:size(index) % For each occurrence
     
-    % Take the B-CNAV1 symbols with one-frame length from data-channel
+    % Take the CNAV-2 symbols with one-frame length from data-channel
     % prompt correlation values and change them to "1" and "0"
     bits = trackResults(channelNr).I_P(index(i): index(i) + 1799);
     bits(bits > 0)  =  1;
@@ -100,60 +101,41 @@ for i = 1:size(index) % For each occurrence
     
     %--- First subframe decoding ------------------------------------------
     % Covert symbol polarity: 0 -> 1 and 1 -> -1
-    checkBits  = 1 - 2 * bits(1:21);
-    % BCH(21,6) decoding
-    [flag,decodedBits] = BCH21_6Decoding(checkBits);
+    checkBits  = 1 - 2 * bits(2:52);
+    % BCH(51,8) decoding
+    [flag,decodedBits] = BCH51_8Decoding(checkBits);
     
-    % If BCH(21,6) check passes, the B-CNAV1 symbol polarity is right;
+    % If BCH(51,8) check passes, the CNAV-2 symbol polarity is right;
     % otherwise try another bit polarity and do BCH check gagain
     if flag ==0
         % Change polarity
         bits = 1- bits;
         % Covert symbol polarity: 0 -> 1 and 1 -> -1
-        checkBits  = 1- 2 * bits(1:21);
-        [flag,decodedBits] = BCH21_6Decoding(checkBits);
+        checkBits  = 1- 2 * bits(2:52);
+        [flag,decodedBits] = BCH51_8Decoding(checkBits);
         % BCH decoding fails, then try another frame start position
         if flag ==0
             continue
         end
     end
     
-    % BCH decoding OK, then get First part of 1st subframe
-    decodedNav(1:6) = decodedBits;
-    
-    % Parity is OK since BCH(21,6) decoding has passed. Now the BCH(51,8)
-    % decoding
-    checkBits  = 1- 2* bits(22:72);
-    % BCH(51,8) decoding
-    [flag,decodedBits] = BCH51_8Decoding(checkBits);
-    
-    % BCH decoding fails, then try another frame start position
-    if flag == 0
-        continue
-    end
-    % Second part of the 1st subframe
-    decodedNav(7:14) = decodedBits;
+    % BCH decoding OK, store subframe 1 result
+    decodedNav(1:9) = decodedBits;
     
     %--- Perform deinterleaving for sub-frames #2 and #3 ------------------
-    % Deinterleaving follows fix flow as indicated by the BDS-SIS-ICD-B1C-1.0
-    temp_Bits = reshape(bits(73:end),[36,48]);
-    Frame3Colum = 3:3:35;
-    Frame2Colum = setdiff(1:36,Frame3Colum);
-    % 2nd subframe
-    Frame2 = temp_Bits(Frame2Colum,:);
-    Frame2 = reshape(Frame2',1,1200);
-    % 3rd subframe
-    Frame3 = temp_Bits(Frame3Colum,:);
-    Frame3 = reshape(Frame3',1,528);
+    % Deinterleaving follows fix flow as indicated by the IS-GPS-800J
+    temp_Bits = reshape(bits(53:end),[38,46]);
+    Frame2 = [reshape(temp_Bits(1:26, :)', 1, []) temp_Bits(27, 1:4)];
+    Frame3 = [temp_Bits(27, 5:end) reshape(temp_Bits(28:end, :)', 1, [])];
     
     %--- LDPC decoding for sub-frames #2 and #3 ---------------------------
     % No LDPC decoding is performed temporarily,take it directly.
     % Here should the LDPC decoding be sadded ...
     
     % Second subframe: last 24 bits are the CRC
-    decodedNav(15:614) = Frame2(1:600);
+    decodedNav(10:609) = Frame2(1:600);
     % Third subframe: last 24 bits are the CRC
-    decodedNav(615:end) = Frame3(1:264);
+    decodedNav(610:end) = Frame3(1:274);
     
     %--- To do CRC-24Q check ----------------------------------------------
     % CRC check for 2nd subframe
@@ -161,7 +143,7 @@ for i = 1:size(index) % For each occurrence
     [~,frmError1] = step(crcDet,checkBits');
     
     % CRC check for 2nd subframe
-    checkBits = (Frame3(1:264) > 0.5);
+    checkBits = (Frame3(1:274) > 0.5);
     [~,frmError2] = step(crcDet,checkBits');
     
     %--- Ephemeris decoding -----------------------------------------------
