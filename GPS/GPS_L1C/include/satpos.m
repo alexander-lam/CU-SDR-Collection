@@ -50,27 +50,36 @@ for satNr = 1 : numOfSatellites
 %% Find initial satellite clock correction --------------------------------
 
     %--- Find time difference ---------------------------------------------
-    dt = check_t(transmitTime(satNr) - eph(prn).t_oc);
+    dt = check_t(transmitTime(satNr) - eph(prn).t_oe);
 
     %--- Calculate clock correction ---------------------------------------
-    satClkCorr(satNr) = (eph(prn).a_f2 * dt + eph(prn).a_f1) * dt + ...
+    satClkCorr(satNr) = (eph(prn).a_f2 * dt^2 + eph(prn).a_f1) * dt + ...
                          eph(prn).a_f0 - ...
-                         eph(prn).T_GD;
+                         eph(prn).T_GD + ...
+                         eph(prn).ISC_L1Cd;
 
     time = transmitTime(satNr) - satClkCorr(satNr);
 
 %% Find satellite's position ----------------------------------------------
 
     % Restore semi-major axis
-    a   = eph(prn).sqrtA * eph(prn).sqrtA;
+    if prn <= 32
+        aRef = 26559710;
+    else
+        aRef = 42164200;
+    end
+    a   = eph(prn).deltaA + aRef;
 
     % Time correction
     tk  = check_t(time - eph(prn).t_oe);
 
+    % Semi-major axis at time
+    ak = a + eph(prn).aDot * tk;
+
     % Initial mean motion
-    n0  = sqrt(GM / a^3);
+    n0  = sqrt(GM / ak^3);
     % Mean motion
-    n   = n0 + eph(prn).deltan;
+    n   = n0 + 0.5 * eph(prn).deltaN0Dot * tk;
 
     % Mean anomaly
     M   = eph(prn).M_0 + n * tk;
@@ -96,13 +105,13 @@ for satNr = 1 : numOfSatellites
     E   = rem(E + 2*gpsPi, 2*gpsPi);
 
     % Relativistic correction
-    dtr = F * eph(prn).e * eph(prn).sqrtA * sin(E);
+    dtr = F * eph(prn).e * sqrt(ak) * sin(E);
 
     %Calculate the true anomaly
     nu   = atan2(sqrt(1 - eph(prn).e^2) * sin(E), cos(E)-eph(prn).e);
 
     %Compute angle phi
-    phi = nu + eph(prn).omega;
+    phi = nu + eph(prn).w;
     %Reduce phi to between 0 and 360 deg
     phi = rem(phi, 2*gpsPi);
 
@@ -115,7 +124,7 @@ for satNr = 1 : numOfSatellites
         eph(prn).C_rc * cos(2*phi) + ...
         eph(prn).C_rs * sin(2*phi);
     % Correct inclination
-    i = eph(prn).i_0 + eph(prn).iDot * tk + ...
+    i = eph(prn).i_0 + eph(prn).IDOT * tk + ...
         eph(prn).C_ic * cos(2*phi) + ...
         eph(prn).C_is * sin(2*phi);
     
@@ -124,7 +133,8 @@ for satNr = 1 : numOfSatellites
     yk1 = sin(u)*r;
 
     %Compute the angle between the ascending node and the Greenwich meridian
-    Omega = eph(prn).omega_0 + (eph(prn).omegaDot - Omegae_dot)*tk - ...
+    OmegaDot = -2.6e-9 + eph(prn).deltaOmegaDot;
+    Omega = eph(prn).omega_0 + (OmegaDot - Omegae_dot)*tk - ...
             Omegae_dot * eph(prn).t_oe;
     %Reduce to between 0 and 360 deg
     Omega = rem(Omega + 2*gpsPi, 2*gpsPi);
@@ -140,14 +150,14 @@ for satNr = 1 : numOfSatellites
 %% Include relativistic correction in clock correction --------------------
     satClkCorr(satNr) = (eph(prn).a_f2 * dt + eph(prn).a_f1) * dt + ...
                          eph(prn).a_f0 - ...
-                         eph(prn).T_GD + dtr;       
+                         eph(prn).T_GD + dtr + eph(prn).ISC_L1Cd;       
                      
-%% The following is to calculate sv velocity (currently not used in this version)
+% %% The following is to calculate sv velocity (currently not used in this version)
 % %% Computation of SV velocity in ECEF -----------------------------------
 %     % 2.12 Derivative of eccentric Anomaly ----------------------------
 %     dE = n/(1-eph(prn).e *cos(E));
 %     
-%     % 2.13 Derivative of argument of Latitude --------------------------
+%     % 2.13 Derivative of true anomaly --------------------------
 %     dphi = sqrt(1 - eph(prn).e^2) * dE / (1-eph(prn).e *cos(E));
 %     
 %     % 2.14-2.15 Derivative of the following terms ------------------------   
@@ -164,12 +174,12 @@ for satNr = 1 : numOfSatellites
 %     
 % 	% Derivative of inclination
 %     %Correct inclination
-%     di = eph(prn).iDot + ...
+%     di = eph(prn).IDOT + ...
 %         2*dphi*(-eph(prn).C_ic * sin(2*phi) + ...
 %         eph(prn).C_is * cos(2*phi));
 %     
 %     % Derivative of Longitude of Ascending Node
-%     dOmega = eph(prn).omegaDot - Omegae_dot;
+%     dOmega = OmegaDot - Omegae_dot;
 %     
 %     % 2.16 SV velocity in orbital plane ------------------------
 %     dxk1 = dr*cos(u) - r*du*sin(u);
@@ -182,9 +192,9 @@ for satNr = 1 : numOfSatellites
 % 
 % %% 4¡¢Include relativistic correction in clock rate correction  -------------
 %     % Relativistic correction
-%     dtrRat = F * eph(prn).e * eph(prn).sqrtA * cos(E) *dE;
+%     dtrRat = F * eph(prn).e * ak * cos(E) *dE;
 %     
 % 	% The clock drift is relative small, thus can be neglectde at most time.
 %     satClkCorrRat(satNr) = 2* eph(prn).a_f2 * dt + eph(prn).a_f1 + dtrRat;                    
-   
+%    
 end % for satNr = 1 : numOfSatellites
