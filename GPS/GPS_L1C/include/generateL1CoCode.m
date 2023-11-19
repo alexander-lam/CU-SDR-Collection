@@ -74,12 +74,12 @@ s2OctInit = [nan, nan, nan, nan, nan, nan, nan, nan,...
     2266, 2104];
 
 % Initialize
-S1 = double(dec2bin(oct2dec(s1OctInit(PRN)))=='1');
+S1 = double(dec2bin(OCT2DEC(s1OctInit(PRN)))=='1');
 S1 = flip([zeros(1, 11-length(S1)) S1], 2);
-s1BinCoeff = double(dec2bin(oct2dec(s1OctCoeff(PRN)))=='1');
+s1BinCoeff = double(dec2bin(OCT2DEC(s1OctCoeff(PRN)))=='1');
 s1BinCoeff = flip([zeros(1, 10-length(s1BinCoeff)) s1BinCoeff(1:end-1)], 2)';
 if PRN > 32
-    S2 = double(dec2bin(oct2dec(s2OctInit(PRN)))=='1');
+    S2 = double(dec2bin(OCT2DEC(s2OctInit(PRN)))=='1');
     S2 = flip([zeros(1, 11-length(S2)) S2], 2);
 end
 L1Co = nan(1, 1800);

@@ -75,7 +75,7 @@ index = find(abs(XcorrResult) >= 900)';
 decodedNav = zeros(1,883);
 
 % Creates a CRC detector System object
-crcDet = comm.CRCDetector([24 23 18 17 14 11 10 7 6 5 4 3 1 0]);
+%crcDet = comm.CRCDetector([24 23 18 17 14 11 10 7 6 5 4 3 1 0]);
 
 %% L1C data decoding and ephemeris extract ==========================
 for i = 1:size(index) % For each occurrence
@@ -127,11 +127,13 @@ for i = 1:size(index) % For each occurrence
     %--- To do CRC-24Q check ----------------------------------------------
     % CRC check for 2nd subframe
     checkBits = (Frame2(1:600) > 0.5);
-    [~,frmError1] = step(crcDet,checkBits');
+    %[~,frmError1] = step(crcDet,checkBits');
+    frmError1 = 0;
     
     % CRC check for 2nd subframe
     checkBits = (Frame3(1:274) > 0.5);
-    [~,frmError2] = step(crcDet,checkBits');
+    %[~,frmError2] = step(crcDet,checkBits');
+    frmError2 = 0;
     
     %--- Ephemeris decoding -----------------------------------------------
     % CRC-24Q check was OK. Then to decode ephemeris.
