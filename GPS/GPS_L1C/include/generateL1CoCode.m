@@ -96,3 +96,5 @@ for i = 1:1800
         L1Co(i) = s1Output;
     end
 end
+
+L1Co = (L1Co==0)*(1) + (L1Co==1)*(-1);

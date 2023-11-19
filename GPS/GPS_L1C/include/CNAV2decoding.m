@@ -68,8 +68,7 @@ XcorrResult = XcorrResult(xcorrLength : xcorrLength * 2 - 1);
 
 clear index;
 % Each L1C frame has 1800 bits
-%index = find(abs(XcorrResult)>= 1799.5)';
-index = find(abs(XcorrResult) >= 900)';
+index = find(abs(XcorrResult)>= 1799.5)';
 
 % The whole CNAV-2 frame bits (original) before encoding
 decodedNav = zeros(1,883);
