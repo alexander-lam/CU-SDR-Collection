@@ -74,16 +74,29 @@ index = find(abs(XcorrResult)>= 1799.5)';
 decodedNav = zeros(1,883);
 
 % Creates a CRC detector System object
-%crcDet = comm.CRCDetector([24 23 18 17 14 11 10 7 6 5 4 3 1 0]);
+crcDet = comm.CRCDetector([24 23 18 17 14 11 10 7 6 5 4 3 1 0]);
 
 %% L1C data decoding and ephemeris extract ==========================
 for i = 1:size(index) % For each occurrence
+    I_P = trackResults(channelNr).I_P(index(i): index(i) + 1799);
+    Q_P = trackResults(channelNr).Q_P(index(i): index(i) + 1799);
     
     % Take the CNAV-2 symbols with one-frame length from data-channel
     % prompt correlation values and change them to "1" and "0"
-    bits = trackResults(channelNr).I_P(index(i): index(i) + 1799);
+    bits = I_P;
     bits(bits > 0)  =  1;
     bits(bits <= 0) = 0;
+
+    % Retain raw data for LDPC decoding and compute noise variance
+    rawData = I_P + 1j * Q_P;
+    Z = I_P.^2 + Q_P.^2;
+    % Calculate the mean and variance of the Power
+    Zm = mean(Z);
+    Zv = var(Z);
+    % Calculate the average carrier power
+    Pav = sqrt(Zm^2 - Zv);
+    % Calculate the variance of the noise
+    Nv = 0.5 * (Zm - Pav);
     
     %--- First subframe decoding ------------------------------------------
     % Covert symbol polarity: 0 -> 1 and 1 -> -1
@@ -103,40 +116,40 @@ for i = 1:size(index) % For each occurrence
         if flag ==0
             continue
         end
+        % Compute LLR for LDPC decoding with flipped bits
+        llr = pskdemod(rawData, 2, 0, 'NoiseVariance', Nv, 'OutputType', 'approxllr');
+    else
+        % Compute LLR for LDPC decoding with non-flipped bits
+        llr = pskdemod(rawData, 2, pi, 'NoiseVariance', Nv, 'OutputType', 'approxllr');
     end
     
     % BCH decoding OK, store subframe 1 result
     decodedNav(1:9) = decodedBits;
     
     %--- Perform deinterleaving for sub-frames #2 and #3 ------------------
-    % Deinterleaving follows fix flow as indicated by the IS-GPS-800J
-    temp_Bits = reshape(bits(53:end),[38,46]);
-    Frame2 = [reshape(temp_Bits(1:26, :)', 1, []) temp_Bits(27, 1:4)];
-    Frame3 = [temp_Bits(27, 5:end) reshape(temp_Bits(28:end, :)', 1, [])];
+    % Deinterleaving of LLR values follows IS-GPS-800J
+    temp_llr = reshape(llr(53:end),[38,46]);
+    sf2_llr = [reshape(temp_llr(1:26, :)', 1, []) temp_llr(27, 1:4)]';
+    sf3_llr = [temp_llr(27, 5:end) reshape(temp_llr(28:end, :)', 1 ,[])]';
     
-    %--- LDPC decoding for sub-frames #2 and #3 ---------------------------
-    % No LDPC decoding is performed temporarily,take it directly.
-    % Here should the LDPC decoding be sadded ...
-    
+    %--- LDPC decoding for sub-frames #2 and #3 --------------------------- 
     % Second subframe: last 24 bits are the CRC
-    decodedNav(10:609) = Frame2(1:600);
+    [ldpcError1, decodedNav(10:609)] = ldpcDecoding(sf2_llr, 2);
     % Third subframe: last 24 bits are the CRC
-    decodedNav(610:end) = Frame3(1:274);
+    [ldpcError2, decodedNav(610:end)] = ldpcDecoding(sf3_llr, 3);
     
     %--- To do CRC-24Q check ----------------------------------------------
     % CRC check for 2nd subframe
-    checkBits = (Frame2(1:600) > 0.5);
-    %[~,frmError1] = step(crcDet,checkBits');
-    frmError1 = 0;
+    checkBits = (decodedNav(10:609) > 0.5);
+    [~,frmError1] = step(crcDet,checkBits');
     
     % CRC check for 2nd subframe
-    checkBits = (Frame3(1:274) > 0.5);
-    %[~,frmError2] = step(crcDet,checkBits');
-    frmError2 = 0;
+    checkBits = (decodedNav(610:end) > 0.5);
+    [~,frmError2] = step(crcDet,checkBits');
     
     %--- Ephemeris decoding -----------------------------------------------
     % CRC-24Q check was OK. Then to decode ephemeris.
-    if (~frmError1) && (~frmError2)
+    if (~ldpcError1) && (~ldpcError2) && (~frmError1) && (~frmError2)
         % Convert from decimal to binary: The function ephemeris expects
         % input in binary form. In Matlab, it is a string array containing
         % only "0" and "1" characters.
