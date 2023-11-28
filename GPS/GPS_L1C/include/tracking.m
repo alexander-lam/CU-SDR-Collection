@@ -282,10 +282,11 @@ for channelNr = 1:settings.numberOfChannels
                 tcode4      = ceil(tcode3) + 3;
                 p61_earlyCode = pilotBOC61(tcode4);
                 for sample=1:length(tcode2)
-                    if tcode2(sample) == 2 || tcode2(sample) == 3 ||... chip 0
-                            tcode2(sample) == 10 || tcode2(sample) == 11 ||... chip 4
-                            tcode2(sample) == 14 || tcode2(sample) == 15 ||... chip 6
-                            tcode2(sample) == 60 || tcode2(sample) == 61
+                    sampleMod = mod(tcode2(sample)-1, 66);
+                    if sampleMod == 1 || sampleMod == 2 ||... %chip 0
+                            sampleMod == 9 || sampleMod == 10 ||... %chip 4
+                            sampleMod == 13 || sampleMod == 14 ||... %chip 6
+                            sampleMod == 59 || sampleMod == 60 % chip 29
                         pilot_earlyCode(sample) = p61_earlyCode(sample);
                     end
                 end
@@ -307,10 +308,11 @@ for channelNr = 1:settings.numberOfChannels
                 tcode4      = ceil(tcode3) + 3;
                 p61_lateCode = pilotBOC61(tcode4);
                 for sample=1:length(tcode2)
-                    if tcode2(sample) == 2 || tcode2(sample) == 3 ||... chip 0
-                            tcode2(sample) == 10 || tcode2(sample) == 11 ||... chip 4
-                            tcode2(sample) == 14 || tcode2(sample) == 15 ||... chip 6
-                            tcode2(sample) == 60 || tcode2(sample) == 61
+                    sampleMod = mod(tcode2(sample)-1, 66);
+                    if sampleMod == 1 || sampleMod == 2 ||... %chip 0
+                            sampleMod == 9 || sampleMod == 10 ||... %chip 4
+                            sampleMod == 13 || sampleMod == 14 ||... %chip 6
+                            sampleMod == 59 || sampleMod == 60 % chip 29
                         pilot_lateCode(sample) = p61_lateCode(sample);
                     end
                 end
@@ -332,10 +334,11 @@ for channelNr = 1:settings.numberOfChannels
                 tcode4      = ceil(tcode3) + 3;
                 p61_promptCode = pilotBOC61(tcode4);
                 for sample=1:length(tcode2)
-                    if tcode2(sample) == 2 || tcode2(sample) == 3 ||... chip 0
-                            tcode2(sample) == 10 || tcode2(sample) == 11 ||... chip 4
-                            tcode2(sample) == 14 || tcode2(sample) == 15 ||... chip 6
-                            tcode2(sample) == 60 || tcode2(sample) == 61
+                    sampleMod = mod(tcode2(sample)-1, 66);
+                    if sampleMod == 1 || sampleMod == 2 ||... %chip 0
+                            sampleMod == 9 || sampleMod == 10 ||... %chip 4
+                            sampleMod == 13 || sampleMod == 14 ||... %chip 6
+                            sampleMod == 59 || sampleMod == 60 % chip 29
                         pilot_promptCode(sample) = p61_promptCode(sample);
                     end
                 end
