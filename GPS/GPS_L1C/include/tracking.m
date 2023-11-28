@@ -168,6 +168,11 @@ for channelNr = 1:settings.numberOfChannels
         pilotBOC11 = generateL1Cpboc11code(channel(channelNr).PRN);
         % Then make it possible to do early and late versions
         pilotBOC11 = [pilotBOC11(codeLength*2) pilotBOC11 pilotBOC11(1)];  %#ok<AGROW>
+
+        % Get a vector with the pilot BOC(6,1) spreading waveform
+        pilotBOC61 = generateL1Cpboc61code(channel(channelNr).PRN);
+        % Then make it possible to do early and late versions
+        pilotBOC61 = [pilotBOC61(codeLength*6-2:codeLength*6) pilotBOC61 pilotBOC61(1:3)];  %#ok<AGROW>
         
         %--- Perform various initializations ------------------------------
         
@@ -269,7 +274,10 @@ for channelNr = 1:settings.numberOfChannels
             earlyCode   = L1CData(tcode2);
             
             % For pilot channel signal tracking
-            p11_earlyCode   = pilotBOC11(tcode2);
+            if settings.tmbocTracking
+            else
+                p11_earlyCode   = pilotBOC11(tcode2);
+            end
             
             % Define index into late code vector
             tcode       = (remCodePhase+earlyLateSpc)*2 : ...
@@ -279,7 +287,10 @@ for channelNr = 1:settings.numberOfChannels
             lateCode    = L1CData(tcode2);
             
             % For pilot channel signal tracking
-            p11_lateCode   = pilotBOC11(tcode2);
+            if settings.tmbocTracking
+            else
+                p11_lateCode   = pilotBOC11(tcode2);
+            end
             
             % Define index into prompt code vector
             tcode       = remCodePhase*2 : ...
@@ -289,7 +300,10 @@ for channelNr = 1:settings.numberOfChannels
             promptCode  = L1CData(tcode2);
             
             % For pilot channel signal tracking
-            p11_promptCode   = pilotBOC11(tcode2);
+            if settings.tmbocTracking
+            else
+                p11_promptCode   = pilotBOC11(tcode2);
+            end
             
             remCodePhase = tcode(blksize)/2 + codePhaseStep - codeLength;
             

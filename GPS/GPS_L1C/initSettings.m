@@ -112,7 +112,8 @@ settings.pllNoiseBandwidth       = 20;      %[Hz]
 
 % Integration time for DLL and PLL
 settings.intTime                 = 0.01;      %[s]
-settings.pilotTRKflag       = 1; 
+settings.pilotTRKflag       = 1;
+settings.tmbocTracking      = 1;
 %% Navigation solution settings ===========================================
 
 % Period for calculating pseudoranges and position
