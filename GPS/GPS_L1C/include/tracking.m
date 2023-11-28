@@ -274,9 +274,21 @@ for channelNr = 1:settings.numberOfChannels
             earlyCode   = L1CData(tcode2);
             
             % For pilot channel signal tracking
+            pilot_earlyCode = pilotBOC11(tcode2);
             if settings.tmbocTracking
-            else
-                p11_earlyCode   = pilotBOC11(tcode2);
+                tcode3       = (remCodePhase-earlyLateSpc)*12 : ...
+                    codePhaseStep*12 : ...
+                    ((blksize-1) * codePhaseStep + remCodePhase- earlyLateSpc)*12;
+                tcode4      = ceil(tcode3) + 3;
+                p61_earlyCode = pilotBOC61(tcode4);
+                for sample=1:length(tcode2)
+                    if tcode2(sample) == 2 || tcode2(sample) == 3 ||... chip 0
+                            tcode2(sample) == 10 || tcode2(sample) == 11 ||... chip 4
+                            tcode2(sample) == 14 || tcode2(sample) == 15 ||... chip 6
+                            tcode2(sample) == 60 || tcode2(sample) == 61
+                        pilot_earlyCode(sample) = p61_earlyCode(sample);
+                    end
+                end
             end
             
             % Define index into late code vector
@@ -287,9 +299,21 @@ for channelNr = 1:settings.numberOfChannels
             lateCode    = L1CData(tcode2);
             
             % For pilot channel signal tracking
+            pilot_lateCode   = pilotBOC11(tcode2);
             if settings.tmbocTracking
-            else
-                p11_lateCode   = pilotBOC11(tcode2);
+                tcode3       = (remCodePhase+earlyLateSpc)*12 : ...
+                    codePhaseStep*12 : ...
+                    ((blksize-1) * codePhaseStep + remCodePhase+ earlyLateSpc)*12;
+                tcode4      = ceil(tcode3) + 3;
+                p61_lateCode = pilotBOC61(tcode4);
+                for sample=1:length(tcode2)
+                    if tcode2(sample) == 2 || tcode2(sample) == 3 ||... chip 0
+                            tcode2(sample) == 10 || tcode2(sample) == 11 ||... chip 4
+                            tcode2(sample) == 14 || tcode2(sample) == 15 ||... chip 6
+                            tcode2(sample) == 60 || tcode2(sample) == 61
+                        pilot_lateCode(sample) = p61_lateCode(sample);
+                    end
+                end
             end
             
             % Define index into prompt code vector
@@ -300,9 +324,21 @@ for channelNr = 1:settings.numberOfChannels
             promptCode  = L1CData(tcode2);
             
             % For pilot channel signal tracking
+            pilot_promptCode   = pilotBOC11(tcode2);
             if settings.tmbocTracking
-            else
-                p11_promptCode   = pilotBOC11(tcode2);
+                tcode3       = (remCodePhase)*12 : ...
+                    codePhaseStep*12 : ...
+                    ((blksize-1) * codePhaseStep + remCodePhase)*12;
+                tcode4      = ceil(tcode3) + 3;
+                p61_promptCode = pilotBOC61(tcode4);
+                for sample=1:length(tcode2)
+                    if tcode2(sample) == 2 || tcode2(sample) == 3 ||... chip 0
+                            tcode2(sample) == 10 || tcode2(sample) == 11 ||... chip 4
+                            tcode2(sample) == 14 || tcode2(sample) == 15 ||... chip 6
+                            tcode2(sample) == 60 || tcode2(sample) == 61
+                        pilot_promptCode(sample) = p61_promptCode(sample);
+                    end
+                end
             end
             
             remCodePhase = tcode(blksize)/2 + codePhaseStep - codeLength;
@@ -335,12 +371,12 @@ for channelNr = 1:settings.numberOfChannels
             Q_L = sum(lateCode   .* qBasebandSignal);
             
             % Correlation values for pilot BOC(1,1) spreading waveform
-            p11_I_E = sum(p11_earlyCode  .* iBasebandSignal);
-            p11_Q_E = sum(p11_earlyCode  .* qBasebandSignal);
-            p11_I_P = sum(p11_promptCode .* iBasebandSignal);
-            p11_Q_P = sum(p11_promptCode .* qBasebandSignal);
-            p11_I_L = sum(p11_lateCode   .* iBasebandSignal);
-            p11_Q_L = sum(p11_lateCode   .* qBasebandSignal);
+            p11_I_E = sum(pilot_earlyCode  .* iBasebandSignal);
+            p11_Q_E = sum(pilot_earlyCode  .* qBasebandSignal);
+            p11_I_P = sum(pilot_promptCode .* iBasebandSignal);
+            p11_Q_P = sum(pilot_promptCode .* qBasebandSignal);
+            p11_I_L = sum(pilot_lateCode   .* iBasebandSignal);
+            p11_Q_L = sum(pilot_lateCode   .* qBasebandSignal);
             
             %% Find PLL error and update carrier NCO ----------------------------------
             
