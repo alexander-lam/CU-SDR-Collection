@@ -132,8 +132,55 @@ if (~isempty(navSolutions))
             navSolutions.PRN(:, 1));
         
     title (handles(3, 2), ['Sky plot (mean PDOP: ', ...
-                               num2str(mean(navSolutions.DOP(2,:))), ')']);  
-                           
+                               num2str(mean(navSolutions.DOP(2,:))), ')']);
+
+    %--- Height plot ------------------------------------------------------
+    figure(405);
+    clf(405);
+    set(405, 'Name', 'Height plot');
+
+    % Height vs Time
+    subplot(1,2,1);
+    plot(navSolutions.localTime-navSolutions.localTime(1), navSolutions.height);
+    axis('tight');
+    title('Navigation Result Height vs Time');
+    xlabel('Time Since Reporting Epoch (s)');
+    ylabel('Height Above WGS84 (m)');
+
+    % Histogram
+    subplot(1,2,2);
+    histogram(navSolutions.height);
+    title(['Height Histogram: Mean = ', num2str(mean(navSolutions.height)), ' m, StDev = ', num2str(std(navSolutions.height)), ' m']);
+    xlabel('Bin Height Above WGS84 (m)');
+    ylabel('Number in Bin');
+
+    %--- CEP plot ---------------------------------------------------------
+    % Compute each measurement dimension from center, compute covariance
+    % matrix, and apply 90% bivariate normal distrbution using crr.m
+    cep90 = crr(cov(navSolutions.E-refCoord.E, navSolutions.N-refCoord.N), 0.9);
+
+    % CEP plot
+    figure(410);
+    clf(410);
+    set(410, 'Name', 'CEP plot');
+
+    % Plot measurements
+    scatter(navSolutions.E-refCoord.E, navSolutions.N-refCoord.N, '+');
+
+    hold on;
+    % Plot center point
+    plot(0, 0, 'r+', 'LineWidth', 1.5, 'MarkerSize', 10);
+
+    % Plot CEP circle
+    fplot(@(t) cep90*sin(t), @(t) cep90*cos(t));
+    hold off;
+
+    axis equal;
+    axis tight;
+    legend('Measurements', refPointLgText, ['CEP = ', num2str(cep90), ' m']);
+    xlabel('Easting (m)');
+    ylabel('Northing (m)');
+    title('Horizontal CEP in UTM System');                           
 else
     disp('plotNavigation: No navigation data to plot.');
 end % if (~isempty(navSolutions))
