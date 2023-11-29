@@ -44,7 +44,7 @@ function settings = initSettings()
 settings.msToProcess        = 37000;        %[ms]
 
 % Number of channels to be used for signal processing
-settings.numberOfChannels   = 6;
+settings.numberOfChannels   = 12;
 
 % Move the starting point of processing. Can be used to start the signal
 % processing at any point in the data record (e.g. for long records). fseek
@@ -56,7 +56,8 @@ settings.skipNumberOfBytes     = 0;
 % This is a "default" name of the data file (signal record) to be used in
 % the post-processing mode
 %settings.fileName           = '..\..\ASEN6091midtermExam2023.bin';
-settings.fileName           = '..\..\SU_6msps_23Aug2023_23-15UTC_20kHzIF.bin';
+%settings.fileName           = '..\..\SU_6msps_23Aug2023_23-15UTC_20kHzIF.bin';
+settings.fileName            = '..\..\MD_20e3IF_2e6Fs.bin';
 % Data type used to store one sample
 settings.dataType           = 'schar';  
 
@@ -68,8 +69,10 @@ settings.fileType           = 2;
 % Intermediate, sampling and code frequencies
 %settings.IF                 = -4.58e6;     % [Hz]
 %settings.samplingFreq       = 56e6;        % [Hz]
-settings.IF = 20e3;
-settings.samplingFreq = 6e6;
+%settings.IF = 20e3;
+%settings.samplingFreq = 6e6;
+settings.IF = 0.42e6;
+settings.samplingFreq = 2e6;
 settings.codeFreqBasis      = 1.023e6;     % [Hz]
 
 % Define number of chips in a code period
@@ -80,10 +83,11 @@ settings.carrFreqBasis = 1575.42e6;    % [Hz]
 
 %% Acquisition settings ===================================================
 % Skips acquisition in the script postProcessing.m if set to 1
-settings.skipAcquisition    = 0;
+settings.skipAcquisition    = 1;
 % List of satellites to look for. Some satellites can be excluded to speed
 % up acquisition
-settings.acqSatelliteList   = [195];         %[PRN numbers]
+%settings.acqSatelliteList   = [195];         %[PRN numbers]
+settings.acqSatelliteList = 1:32;
 % Band around IF to search for satellite signal. Depends on max Doppler.
 % It is single sideband, so the whole search band is tiwce of it.
 settings.acqSearchBand      = 8000;           %[Hz]
@@ -113,7 +117,7 @@ settings.pllNoiseBandwidth       = 20;      %[Hz]
 % Integration time for DLL and PLL
 settings.intTime                 = 0.01;      %[s]
 settings.pilotTRKflag       = 1;
-settings.tmbocTracking      = 1;
+settings.tmbocTracking      = 0;
 %% Navigation solution settings ===========================================
 
 % Period for calculating pseudoranges and position
