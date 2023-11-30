@@ -83,11 +83,12 @@ settings.carrFreqBasis = 1575.42e6;    % [Hz]
 
 %% Acquisition settings ===================================================
 % Skips acquisition in the script postProcessing.m if set to 1
-settings.skipAcquisition    = 1;
+settings.skipAcquisition    = 0;
 % List of satellites to look for. Some satellites can be excluded to speed
 % up acquisition
-%settings.acqSatelliteList   = [195];         %[PRN numbers]
-settings.acqSatelliteList = 1:32;
+%settings.acqSatelliteList = 195;
+settings.acqSatelliteList   = [1 2 4 7 13 25];         %[PRN numbers]
+%settings.acqSatelliteList = 1:32;
 % Band around IF to search for satellite signal. Depends on max Doppler.
 % It is single sideband, so the whole search band is tiwce of it.
 settings.acqSearchBand      = 8000;           %[Hz]
@@ -98,7 +99,7 @@ settings.acqNonCohTime      = 1;                %[ms]
 % Threshold for the signal presence decision rule
 settings.acqThreshold       = 2;
 % Frequency search step for coarse acquisition
-settings.acqSearchStep      = 10;               % [Hz]
+settings.acqSearchStep      = 2;               % [Hz]
 % Sampling rate threshold for downsampling 
 settings.resamplingThreshold    = 8e6;            % [Hz]
 % Enable/dissable use of downsampling for acquisition
@@ -107,8 +108,8 @@ settings.resamplingflag         = 0;              % 0 - Off
 %% Tracking loops settings ================================================
 % Code tracking loop parameters
 settings.dllDampingRatio         = 0.7;
-settings.dllNoiseBandwidth       = 8;       %[Hz]
-settings.dllCorrelatorSpacing    = 0.1;     %[chips]
+settings.dllNoiseBandwidth       = 5;       %[Hz]
+settings.dllCorrelatorSpacing    = 0.2;     %[chips]
 
 % Carrier tracking loop parameters
 settings.pllDampingRatio         = 0.7;
