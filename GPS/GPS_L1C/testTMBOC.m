@@ -10,6 +10,8 @@ pilotBOC61 = repmat(generateL1Cpboc61code(PRN), 1, 10);
 replicaBOC11 = generateL1Cpboc11code(PRN);
 replicaBOC61 = generateL1Cpboc61code(PRN);
 sampledReplica20 = sampleTMBOC(replicaBOC11, replicaBOC61, 20e6);
+sampledReplica6 = sampleTMBOC(replicaBOC11, replicaBOC61, 6e6);
+sampledReplica4 = sampleTMBOC(replicaBOC11, replicaBOC61, 4e6);
 sampledReplica2 = sampleTMBOC(replicaBOC11, replicaBOC61, 2e6);
 
 % Sample at 20 Msps and do autocorrelation
@@ -17,6 +19,18 @@ sampledCode20 = sampleTMBOC(pilotBOC11, pilotBOC61, 20e6);
 autoCorr20 = xcorr(sampledCode20, sampledReplica20);
 autoCorr20Length = (length(autoCorr20) +  1) /2;
 autoCorr20 = autoCorr20(autoCorr20Length : autoCorr20Length * 2 - 1);
+
+% Resample at 6 Msps and do autocorrelation
+sampledCode6 = resample(sampledCode20, 3, 10);
+autoCorr6 = xcorr(sampledCode6, sampledReplica6);
+autoCorr6Length = (length(autoCorr6) + 1) /2;
+autoCorr6 = autoCorr6(autoCorr6Length : autoCorr6Length * 2 - 1);
+
+% Resample at 4 Msps and do autocorrelation
+sampledCode4 = resample(sampledCode20, 1, 5);
+autoCorr4 = xcorr(sampledCode4, sampledReplica4);
+autoCorr4Length = (length(autoCorr4) + 1) /2;
+autoCorr4 = autoCorr4(autoCorr4Length : autoCorr4Length * 2 - 1);
 
 % Resample at 2 Msps and do autocorrelation
 sampledCode2 = resample(sampledCode20, 1, 10);
@@ -26,19 +40,31 @@ autoCorr2 = autoCorr2(autoCorr2Length : autoCorr2Length * 2 - 1);
 
 figure(1);
 
-subplot(1,2,1);
-plot(abs(autoCorr20));
+subplot(2,2,1);
+plot(linspace(-2, 2, 81), abs(autoCorr20(200001-40:200001+40)));
 title('AutoCorr of PRN 1 at 20 Msps');
-xlabel('Samples');
+xlabel('Samples Relative to Peak');
 ylabel('Correlation Energy');
-xlim([-20000, inf]);
+%xlim([200001-40, 200001+40]);
 
-subplot(1,2,2);
-plot(abs(autoCorr2));
-title('AutoCorr of PRN 1 at Filtered 2 Msps');
-xlabel('Samples');
+subplot(2,2,2);
+plot(linspace(-2, 2, 25), abs(autoCorr6(60001-12:60001+12)));
+title('AutoCorr of PRN 1 at Filtered 6 Msps');
+xlabel('Samples Relative to Peak');
 ylabel('Correlation Energy');
-xlim([-1000, inf]);
+
+subplot(2,2,3);
+plot(linspace(-2, 2, 17), abs(autoCorr4(40001-8:40001+8)));
+title('AutoCorr of PRN 1 at Filtered 4 Msps');
+xlabel('Samples Relative to Peak');
+ylabel('Correlation Energy');
+
+subplot(2,2,4);
+plot(linspace(-2, 2, 9), abs(autoCorr2(20001-4:20001+4)));
+title('AutoCorr of PRN 1 at Filtered 2 Msps');
+xlabel('Samples Relative to Peak');
+ylabel('Correlation Energy');
+%xlim([20001-4, 20001+4]);
 
 function pilot_promptCode = sampleTMBOC(pilotBOC11, pilotBOC61, samplingFreq)
     codeFreq = 1.023e6;
